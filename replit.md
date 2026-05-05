@@ -38,9 +38,19 @@ A premium full-stack mobile-first streaming platform where users can buy tickets
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 
+## Mobile App (Expo)
+
+- **Framework**: React Native + Expo Router (SDK 54)
+- **Preview path**: `/mobile/`
+- **Artifact dir**: `artifacts/cinelive-mobile/`
+- **Auth**: Guest mode — browse is public, tickets stored in AsyncStorage
+- **Screens**: Home (hero + category tabs), Browse (search + filter), Tickets (AsyncStorage), Profile, Show Detail (purchase modal), Watch (video player + live chat)
+- **Theme**: Always dark, matching web design tokens (crimson #DC2626 on charcoal #14161a)
+
 ## Architecture
 
 - Frontend artifact: `artifacts/cinelive/` — serves at `/`
+- Mobile artifact: `artifacts/cinelive-mobile/` — serves at `/mobile/`
 - API server: `artifacts/api-server/` — serves at `/api`
 - DB schema: `lib/db/src/schema/` — users, shows, tickets, watchHistory, chatMessages
 - OpenAPI spec: `lib/api-spec/openapi.yaml`

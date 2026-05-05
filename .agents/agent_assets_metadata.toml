@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "zpf5Rfg2UuBc6n0eeG93j"
+uri = "file://artifacts/cinelive-mobile/assets/images/icon.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "caXVuSFaFCU6hCpj1uvmh"
+uri = "file://artifacts/cinelive-mobile/assets/images/hero-movies.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "jYtHgWyEaksKTlTRLNGZC"
+uri = "file://artifacts/cinelive-mobile/assets/images/hero-concerts.png"
+type = "image"
+title = "generated_image"
