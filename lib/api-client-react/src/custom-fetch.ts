@@ -1,3 +1,5 @@
+import { getAuthToken } from "../../../artifacts/cinelive/src/lib/authToken";
+
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };
@@ -18,28 +20,10 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
 
-/**
- * Set a base URL that is prepended to every relative request URL
- * (i.e. paths that start with `/`).
- *
- * Useful for Expo bundles that need to call a remote API server.
- * Pass `null` to clear the base URL.
- */
 export function setBaseUrl(url: string | null): void {
   _baseUrl = url ? url.replace(/\/+$/, "") : null;
 }
 
-/**
- * Register a getter that supplies a bearer auth token.  Before every fetch
- * the getter is invoked; when it returns a non-null string, an
- * `Authorization: Bearer <token>` header is attached to the request.
- *
- * Useful for Expo bundles making token-gated API calls.
- * Pass `null` to clear the getter.
- *
- * NOTE: This function should never be used in web applications where session
- * token cookies are automatically associated with API calls by the browser.
- */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
 }
@@ -354,6 +338,12 @@ export async function customFetch<T = unknown>(
   if (_authTokenGetter && !headers.has("authorization")) {
     const token = await _authTokenGetter();
     if (token) {
+      headers.set("authorization", `Bearer ${token}`);
+    }
+  } else {
+    // Fallback to module-level auth token for the React app
+    const token = await getAuthToken();
+    if (token && !headers.has("authorization")) {
       headers.set("authorization", `Bearer ${token}`);
     }
   }

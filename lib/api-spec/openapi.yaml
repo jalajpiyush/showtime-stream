@@ -3,13 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CineLive API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: shows
+    description: Show/movie operations
+  - name: tickets
+    description: Ticket purchase operations
+  - name: users
+    description: User profile operations
+  - name: chat
+    description: Live chat operations
+  - name: admin
+    description: Admin panel operations
+  - name: payments
+    description: Payment operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +37,355 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /shows:
+    get:
+      operationId: listShows
+      tags: [shows]
+      summary: List all shows
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [now_showing, upcoming, all]
+      responses:
+        "200":
+          description: List of shows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Show"
+
+    post:
+      operationId: createShow
+      tags: [admin]
+      summary: Create a new show (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShowBody"
+      responses:
+        "201":
+          description: Created show
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Show"
+
+  /shows/{id}:
+    get:
+      operationId: getShow
+      tags: [shows]
+      summary: Get show by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Show details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Show"
+        "404":
+          description: Not found
+
+    patch:
+      operationId: updateShow
+      tags: [admin]
+      summary: Update a show (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShowBody"
+      responses:
+        "200":
+          description: Updated show
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Show"
+
+    delete:
+      operationId: deleteShow
+      tags: [admin]
+      summary: Delete a show (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /shows/featured:
+    get:
+      operationId: getFeaturedShows
+      tags: [shows]
+      summary: Get featured/hero shows for home carousel
+      responses:
+        "200":
+          description: Featured shows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Show"
+
+  /shows/stats:
+    get:
+      operationId: getShowStats
+      tags: [admin]
+      summary: Get aggregate show statistics (admin)
+      responses:
+        "200":
+          description: Show stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShowStats"
+
+  /tickets:
+    get:
+      operationId: listMyTickets
+      tags: [tickets]
+      summary: List tickets owned by the authenticated user
+      responses:
+        "200":
+          description: User's tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+
+  /tickets/purchase:
+    post:
+      operationId: purchaseTicket
+      tags: [tickets, payments]
+      summary: Purchase a ticket for a show (mock payment)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseTicketBody"
+      responses:
+        "201":
+          description: Ticket purchased
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "400":
+          description: Bad request or already purchased
+
+  /tickets/check/{showId}:
+    get:
+      operationId: checkTicketAccess
+      tags: [tickets]
+      summary: Check if user has a ticket for a specific show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketAccess"
+
+  /users/me:
+    get:
+      operationId: getMyProfile
+      tags: [users]
+      summary: Get the authenticated user's profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+    patch:
+      operationId: updateMyProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/history:
+    get:
+      operationId: getWatchHistory
+      tags: [users]
+      summary: Get user's watch/playback history
+      responses:
+        "200":
+          description: Watch history entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchHistory"
+
+  /users/history/{showId}:
+    post:
+      operationId: recordWatchHistory
+      tags: [users]
+      summary: Record or update watch history for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordHistoryBody"
+      responses:
+        "200":
+          description: History recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchHistory"
+
+  /chat/{showId}:
+    get:
+      operationId: getChatMessages
+      tags: [chat]
+      summary: Get recent chat messages for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a chat message during a live show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+
+  /admin/users:
+    get:
+      operationId: listUsers
+      tags: [admin]
+      summary: List all users with purchase info (admin only)
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+
+  /admin/purchases:
+    get:
+      operationId: listAllPurchases
+      tags: [admin]
+      summary: List all ticket purchases (admin only)
+      responses:
+        "200":
+          description: All purchases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminPurchase"
+
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +396,307 @@ components:
       required:
         - status
 
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    Show:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: string
+          enum: [now_showing, upcoming]
+        genre:
+          type: ["string", "null"]
+        duration:
+          type: ["integer", "null"]
+        startTime:
+          type: ["string", "null"]
+        isLive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        ticketCount:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - price
+        - category
+        - isLive
+        - isFeatured
+        - ticketCount
+        - createdAt
+
+    CreateShowBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: string
+          enum: [now_showing, upcoming]
+        genre:
+          type: ["string", "null"]
+        duration:
+          type: ["integer", "null"]
+        startTime:
+          type: ["string", "null"]
+        isLive:
+          type: boolean
+        isFeatured:
+          type: boolean
+      required:
+        - title
+        - description
+        - price
+        - category
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        showId:
+          type: integer
+        show:
+          $ref: "#/components/schemas/Show"
+        amountPaid:
+          type: number
+        paymentRef:
+          type: string
+        purchasedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - showId
+        - show
+        - amountPaid
+        - paymentRef
+        - purchasedAt
+
+    PurchaseTicketBody:
+      type: object
+      properties:
+        showId:
+          type: integer
+        paymentMethodToken:
+          type: string
+      required:
+        - showId
+        - paymentMethodToken
+
+    TicketAccess:
+      type: object
+      properties:
+        hasAccess:
+          type: boolean
+        ticket:
+          $ref: "#/components/schemas/Ticket"
+      required:
+        - hasAccess
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        isAdmin:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - email
+        - isAdmin
+        - createdAt
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+
+    WatchHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        showId:
+          type: integer
+        show:
+          $ref: "#/components/schemas/Show"
+        progressSeconds:
+          type: integer
+        watchedAt:
+          type: string
+      required:
+        - id
+        - showId
+        - show
+        - progressSeconds
+        - watchedAt
+
+    RecordHistoryBody:
+      type: object
+      properties:
+        progressSeconds:
+          type: integer
+      required:
+        - progressSeconds
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        showId:
+          type: integer
+        userId:
+          type: string
+        displayName:
+          type: string
+        message:
+          type: string
+        sentAt:
+          type: string
+      required:
+        - id
+        - showId
+        - userId
+        - displayName
+        - message
+        - sentAt
+
+    SendChatBody:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        isAdmin:
+          type: boolean
+        ticketCount:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - email
+        - isAdmin
+        - ticketCount
+        - createdAt
+
+    AdminPurchase:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        userEmail:
+          type: string
+        showTitle:
+          type: string
+        amountPaid:
+          type: number
+        paymentRef:
+          type: string
+        purchasedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - userEmail
+        - showTitle
+        - amountPaid
+        - paymentRef
+        - purchasedAt
+
+    ShowStats:
+      type: object
+      properties:
+        totalShows:
+          type: integer
+        nowShowing:
+          type: integer
+        upcoming:
+          type: integer
+        liveNow:
+          type: integer
+      required:
+        - totalShows
+        - nowShowing
+        - upcoming
+        - liveNow
+
+    AdminDashboard:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalRevenue:
+          type: number
+        totalTickets:
+          type: integer
+        totalShows:
+          type: integer
+        recentPurchases:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminPurchase"
+      required:
+        - totalUsers
+        - totalRevenue
+        - totalTickets
+        - totalShows
+        - recentPurchases
