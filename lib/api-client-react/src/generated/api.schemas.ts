@@ -7,10 +7,8 @@
  */
 export interface HealthStatus {
   status: string;
-}
-
-export interface MessageResponse {
-  message: string;
+  uptime: number;
+  timestamp: string;
 }
 
 export type ShowCategory = (typeof ShowCategory)[keyof typeof ShowCategory];
@@ -18,6 +16,23 @@ export type ShowCategory = (typeof ShowCategory)[keyof typeof ShowCategory];
 export const ShowCategory = {
   now_showing: "now_showing",
   upcoming: "upcoming",
+} as const;
+
+export type ShowShowType = (typeof ShowShowType)[keyof typeof ShowShowType];
+
+export const ShowShowType = {
+  movie: "movie",
+  concert: "concert",
+  live_event: "live_event",
+} as const;
+
+export type ShowReleaseType =
+  (typeof ShowReleaseType)[keyof typeof ShowReleaseType];
+
+export const ShowReleaseType = {
+  theatre_only: "theatre_only",
+  online_only: "online_only",
+  hybrid: "hybrid",
 } as const;
 
 export interface Show {
@@ -30,8 +45,12 @@ export interface Show {
   videoUrl?: string | null;
   price: number;
   category: ShowCategory;
+  showType: ShowShowType;
   /** @nullable */
   genre?: string | null;
+  /** @nullable */
+  language?: string | null;
+  releaseType: ShowReleaseType;
   /** @nullable */
   duration?: number | null;
   /** @nullable */
@@ -50,6 +69,24 @@ export const CreateShowBodyCategory = {
   upcoming: "upcoming",
 } as const;
 
+export type CreateShowBodyShowType =
+  (typeof CreateShowBodyShowType)[keyof typeof CreateShowBodyShowType];
+
+export const CreateShowBodyShowType = {
+  movie: "movie",
+  concert: "concert",
+  live_event: "live_event",
+} as const;
+
+export type CreateShowBodyReleaseType =
+  (typeof CreateShowBodyReleaseType)[keyof typeof CreateShowBodyReleaseType];
+
+export const CreateShowBodyReleaseType = {
+  theatre_only: "theatre_only",
+  online_only: "online_only",
+  hybrid: "hybrid",
+} as const;
+
 export interface CreateShowBody {
   title: string;
   description: string;
@@ -59,8 +96,12 @@ export interface CreateShowBody {
   videoUrl?: string | null;
   price: number;
   category: CreateShowBodyCategory;
+  showType?: CreateShowBodyShowType;
   /** @nullable */
   genre?: string | null;
+  /** @nullable */
+  language?: string | null;
+  releaseType?: CreateShowBodyReleaseType;
   /** @nullable */
   duration?: number | null;
   /** @nullable */
@@ -167,6 +208,7 @@ export interface AdminDashboard {
 
 export type ListShowsParams = {
   category?: ListShowsCategory;
+  showType?: ListShowsShowType;
 };
 
 export type ListShowsCategory =
@@ -177,6 +219,28 @@ export const ListShowsCategory = {
   upcoming: "upcoming",
   all: "all",
 } as const;
+
+export type ListShowsShowType =
+  (typeof ListShowsShowType)[keyof typeof ListShowsShowType];
+
+export const ListShowsShowType = {
+  movie: "movie",
+  concert: "concert",
+  live_event: "live_event",
+  all: "all",
+} as const;
+
+export type DeleteShow200 = {
+  message: string;
+};
+
+export type CheckTicketAccessParams = {
+  showId: number;
+};
+
+export type RecordWatchHistory200 = {
+  ok: boolean;
+};
 
 export type GetChatMessagesParams = {
   limit?: number;

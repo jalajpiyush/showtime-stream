@@ -1,4 +1,3 @@
-import { getAuthToken } from "../../../artifacts/cinelive/src/lib/authToken";
 
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
@@ -338,12 +337,6 @@ export async function customFetch<T = unknown>(
   if (_authTokenGetter && !headers.has("authorization")) {
     const token = await _authTokenGetter();
     if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-  } else {
-    // Fallback to module-level auth token for the React app
-    const token = await getAuthToken();
-    if (token && !headers.has("authorization")) {
       headers.set("authorization", `Bearer ${token}`);
     }
   }

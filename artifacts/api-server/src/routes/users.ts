@@ -69,8 +69,8 @@ router.patch("/me", ensureUser, async (req: AuthRequest, res): Promise<void> => 
   }
 });
 
-// GET /api/users/history
-router.get("/history", ensureUser, async (req: AuthRequest, res): Promise<void> => {
+// GET /api/users/watch-history
+router.get("/watch-history", ensureUser, async (req: AuthRequest, res): Promise<void> => {
   try {
     const userId = req.userId!;
     const history = await db
@@ -98,7 +98,10 @@ router.get("/history", ensureUser, async (req: AuthRequest, res): Promise<void> 
                 videoUrl: show.videoUrl ?? null,
                 price: show.price,
                 category: show.category,
+                showType: show.showType,
                 genre: show.genre ?? null,
+                language: show.language ?? null,
+                releaseType: show.releaseType,
                 duration: show.duration ?? null,
                 startTime: show.startTime ?? null,
                 isLive: show.isLive,
@@ -120,12 +123,12 @@ router.get("/history", ensureUser, async (req: AuthRequest, res): Promise<void> 
   }
 });
 
-// POST /api/users/history/:showId
-router.post("/history/:showId", ensureUser, async (req: AuthRequest, res): Promise<void> => {
+// POST /api/users/watch-history
+router.post("/watch-history", ensureUser, async (req: AuthRequest, res): Promise<void> => {
   try {
     const userId = req.userId!;
-    const showId = parseInt(req.params.showId);
-    const { progressSeconds } = req.body;
+    const { progressSeconds, showId: showIdRaw } = req.body;
+    const showId = parseInt(String(showIdRaw));
 
     if (isNaN(showId)) {
       res.status(400).json({ error: "Invalid showId" });
@@ -178,7 +181,10 @@ router.post("/history/:showId", ensureUser, async (req: AuthRequest, res): Promi
             videoUrl: show.videoUrl ?? null,
             price: show.price,
             category: show.category,
+            showType: show.showType,
             genre: show.genre ?? null,
+            language: show.language ?? null,
+            releaseType: show.releaseType,
             duration: show.duration ?? null,
             startTime: show.startTime ?? null,
             isLive: show.isLive,

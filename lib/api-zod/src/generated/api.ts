@@ -13,6 +13,8 @@ import * as zod from "zod";
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
+  uptime: zod.number(),
+  timestamp: zod.string(),
 });
 
 /**
@@ -20,6 +22,7 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListShowsQueryParams = zod.object({
   category: zod.enum(["now_showing", "upcoming", "all"]).optional(),
+  showType: zod.enum(["movie", "concert", "live_event", "all"]).optional(),
 });
 
 export const ListShowsResponseItem = zod.object({
@@ -30,7 +33,10 @@ export const ListShowsResponseItem = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean(),
@@ -50,7 +56,10 @@ export const CreateShowBody = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]).optional(),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]).optional(),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean().optional(),
@@ -72,7 +81,10 @@ export const GetShowResponse = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean(),
@@ -95,7 +107,10 @@ export const UpdateShowBody = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]).optional(),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]).optional(),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean().optional(),
@@ -110,7 +125,10 @@ export const UpdateShowResponse = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean(),
@@ -131,7 +149,7 @@ export const DeleteShowResponse = zod.object({
 });
 
 /**
- * @summary Get featured/hero shows for home carousel
+ * @summary Get featured shows
  */
 export const GetFeaturedShowsResponseItem = zod.object({
   id: zod.number(),
@@ -141,7 +159,10 @@ export const GetFeaturedShowsResponseItem = zod.object({
   videoUrl: zod.string().nullish(),
   price: zod.number(),
   category: zod.enum(["now_showing", "upcoming"]),
+  showType: zod.enum(["movie", "concert", "live_event"]),
   genre: zod.string().nullish(),
+  language: zod.string().nullish(),
+  releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
   duration: zod.number().nullish(),
   startTime: zod.string().nullish(),
   isLive: zod.boolean(),
@@ -152,7 +173,7 @@ export const GetFeaturedShowsResponseItem = zod.object({
 export const GetFeaturedShowsResponse = zod.array(GetFeaturedShowsResponseItem);
 
 /**
- * @summary Get aggregate show statistics (admin)
+ * @summary Get show stats
  */
 export const GetShowStatsResponse = zod.object({
   totalShows: zod.number(),
@@ -162,7 +183,7 @@ export const GetShowStatsResponse = zod.object({
 });
 
 /**
- * @summary List tickets owned by the authenticated user
+ * @summary List my purchased tickets
  */
 export const ListMyTicketsResponseItem = zod.object({
   id: zod.number(),
@@ -176,7 +197,10 @@ export const ListMyTicketsResponseItem = zod.object({
     videoUrl: zod.string().nullish(),
     price: zod.number(),
     category: zod.enum(["now_showing", "upcoming"]),
+    showType: zod.enum(["movie", "concert", "live_event"]),
     genre: zod.string().nullish(),
+    language: zod.string().nullish(),
+    releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
     duration: zod.number().nullish(),
     startTime: zod.string().nullish(),
     isLive: zod.boolean(),
@@ -191,7 +215,7 @@ export const ListMyTicketsResponseItem = zod.object({
 export const ListMyTicketsResponse = zod.array(ListMyTicketsResponseItem);
 
 /**
- * @summary Purchase a ticket for a show (mock payment)
+ * @summary Purchase a ticket
  */
 export const PurchaseTicketBody = zod.object({
   showId: zod.number(),
@@ -199,9 +223,9 @@ export const PurchaseTicketBody = zod.object({
 });
 
 /**
- * @summary Check if user has a ticket for a specific show
+ * @summary Check if user has access to a show
  */
-export const CheckTicketAccessParams = zod.object({
+export const CheckTicketAccessQueryParams = zod.object({
   showId: zod.coerce.number(),
 });
 
@@ -220,7 +244,10 @@ export const CheckTicketAccessResponse = zod.object({
         videoUrl: zod.string().nullish(),
         price: zod.number(),
         category: zod.enum(["now_showing", "upcoming"]),
+        showType: zod.enum(["movie", "concert", "live_event"]),
         genre: zod.string().nullish(),
+        language: zod.string().nullish(),
+        releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
         duration: zod.number().nullish(),
         startTime: zod.string().nullish(),
         isLive: zod.boolean(),
@@ -236,7 +263,7 @@ export const CheckTicketAccessResponse = zod.object({
 });
 
 /**
- * @summary Get the authenticated user's profile
+ * @summary Get my user profile
  */
 export const GetMyProfileResponse = zod.object({
   id: zod.string(),
@@ -248,7 +275,7 @@ export const GetMyProfileResponse = zod.object({
 });
 
 /**
- * @summary Update user profile
+ * @summary Update my profile
  */
 export const UpdateMyProfileBody = zod.object({
   displayName: zod.string().optional(),
@@ -265,7 +292,7 @@ export const UpdateMyProfileResponse = zod.object({
 });
 
 /**
- * @summary Get user's watch/playback history
+ * @summary Get my watch history
  */
 export const GetWatchHistoryResponseItem = zod.object({
   id: zod.number(),
@@ -278,7 +305,10 @@ export const GetWatchHistoryResponseItem = zod.object({
     videoUrl: zod.string().nullish(),
     price: zod.number(),
     category: zod.enum(["now_showing", "upcoming"]),
+    showType: zod.enum(["movie", "concert", "live_event"]),
     genre: zod.string().nullish(),
+    language: zod.string().nullish(),
+    releaseType: zod.enum(["theatre_only", "online_only", "hybrid"]),
     duration: zod.number().nullish(),
     startTime: zod.string().nullish(),
     isLive: zod.boolean(),
@@ -292,41 +322,18 @@ export const GetWatchHistoryResponseItem = zod.object({
 export const GetWatchHistoryResponse = zod.array(GetWatchHistoryResponseItem);
 
 /**
- * @summary Record or update watch history for a show
+ * @summary Record watch progress
  */
-export const RecordWatchHistoryParams = zod.object({
-  showId: zod.coerce.number(),
-});
-
 export const RecordWatchHistoryBody = zod.object({
   progressSeconds: zod.number(),
 });
 
 export const RecordWatchHistoryResponse = zod.object({
-  id: zod.number(),
-  showId: zod.number(),
-  show: zod.object({
-    id: zod.number(),
-    title: zod.string(),
-    description: zod.string(),
-    thumbnailUrl: zod.string().nullish(),
-    videoUrl: zod.string().nullish(),
-    price: zod.number(),
-    category: zod.enum(["now_showing", "upcoming"]),
-    genre: zod.string().nullish(),
-    duration: zod.number().nullish(),
-    startTime: zod.string().nullish(),
-    isLive: zod.boolean(),
-    isFeatured: zod.boolean(),
-    ticketCount: zod.number(),
-    createdAt: zod.string(),
-  }),
-  progressSeconds: zod.number(),
-  watchedAt: zod.string(),
+  ok: zod.boolean(),
 });
 
 /**
- * @summary Get recent chat messages for a show
+ * @summary Get chat messages for a show
  */
 export const GetChatMessagesParams = zod.object({
   showId: zod.coerce.number(),
@@ -347,7 +354,7 @@ export const GetChatMessagesResponseItem = zod.object({
 export const GetChatMessagesResponse = zod.array(GetChatMessagesResponseItem);
 
 /**
- * @summary Send a chat message during a live show
+ * @summary Send a chat message
  */
 export const SendChatMessageParams = zod.object({
   showId: zod.coerce.number(),
@@ -358,7 +365,28 @@ export const SendChatMessageBody = zod.object({
 });
 
 /**
- * @summary List all users with purchase info (admin only)
+ * @summary Get admin dashboard stats
+ */
+export const GetAdminDashboardResponse = zod.object({
+  totalUsers: zod.number(),
+  totalRevenue: zod.number(),
+  totalTickets: zod.number(),
+  totalShows: zod.number(),
+  recentPurchases: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.string(),
+      userEmail: zod.string(),
+      showTitle: zod.string(),
+      amountPaid: zod.number(),
+      paymentRef: zod.string(),
+      purchasedAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary List all users (admin only)
  */
 export const ListUsersResponseItem = zod.object({
   id: zod.string(),
@@ -383,24 +411,3 @@ export const ListAllPurchasesResponseItem = zod.object({
   purchasedAt: zod.string(),
 });
 export const ListAllPurchasesResponse = zod.array(ListAllPurchasesResponseItem);
-
-/**
- * @summary Get admin dashboard summary stats
- */
-export const GetAdminDashboardResponse = zod.object({
-  totalUsers: zod.number(),
-  totalRevenue: zod.number(),
-  totalTickets: zod.number(),
-  totalShows: zod.number(),
-  recentPurchases: zod.array(
-    zod.object({
-      id: zod.number(),
-      userId: zod.string(),
-      userEmail: zod.string(),
-      showTitle: zod.string(),
-      amountPaid: zod.number(),
-      paymentRef: zod.string(),
-      purchasedAt: zod.string(),
-    }),
-  ),
-});

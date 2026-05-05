@@ -10,7 +10,10 @@ export const showsTable = pgTable("shows", {
   videoUrl: text("video_url"),
   price: doublePrecision("price").notNull().default(0),
   category: text("category").notNull().default("now_showing"), // now_showing | upcoming
+  showType: text("show_type").notNull().default("movie"), // movie | concert | live_event
   genre: text("genre"),
+  language: text("language"), // Hindi | English | Kannada | Punjabi | etc.
+  releaseType: text("release_type").notNull().default("online_only"), // theatre_only | online_only | hybrid
   duration: integer("duration"), // in minutes
   startTime: text("start_time"), // ISO string
   isLive: boolean("is_live").notNull().default(false),

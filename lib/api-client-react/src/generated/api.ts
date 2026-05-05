@@ -21,13 +21,15 @@ import type {
   AdminPurchase,
   AdminUser,
   ChatMessage,
+  CheckTicketAccessParams,
   CreateShowBody,
+  DeleteShow200,
   GetChatMessagesParams,
   HealthStatus,
   ListShowsParams,
-  MessageResponse,
   PurchaseTicketBody,
   RecordHistoryBody,
+  RecordWatchHistory200,
   SendChatBody,
   Show,
   ShowStats,
@@ -401,7 +403,7 @@ export const updateShow = async (
 };
 
 export const getUpdateShowMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -442,13 +444,13 @@ export type UpdateShowMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateShow>>
 >;
 export type UpdateShowMutationBody = BodyType<CreateShowBody>;
-export type UpdateShowMutationError = ErrorType<unknown>;
+export type UpdateShowMutationError = ErrorType<void>;
 
 /**
  * @summary Update a show (admin only)
  */
 export const useUpdateShow = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -477,8 +479,8 @@ export const getDeleteShowUrl = (id: number) => {
 export const deleteShow = async (
   id: number,
   options?: RequestInit,
-): Promise<MessageResponse> => {
-  return customFetch<MessageResponse>(getDeleteShowUrl(id), {
+): Promise<DeleteShow200> => {
+  return customFetch<DeleteShow200>(getDeleteShowUrl(id), {
     ...options,
     method: "DELETE",
   });
@@ -552,7 +554,7 @@ export const useDeleteShow = <
 };
 
 /**
- * @summary Get featured/hero shows for home carousel
+ * @summary Get featured shows
  */
 export const getGetFeaturedShowsUrl = () => {
   return `/api/shows/featured`;
@@ -603,7 +605,7 @@ export type GetFeaturedShowsQueryResult = NonNullable<
 export type GetFeaturedShowsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get featured/hero shows for home carousel
+ * @summary Get featured shows
  */
 
 export function useGetFeaturedShows<
@@ -627,7 +629,7 @@ export function useGetFeaturedShows<
 }
 
 /**
- * @summary Get aggregate show statistics (admin)
+ * @summary Get show stats
  */
 export const getGetShowStatsUrl = () => {
   return `/api/shows/stats`;
@@ -678,7 +680,7 @@ export type GetShowStatsQueryResult = NonNullable<
 export type GetShowStatsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get aggregate show statistics (admin)
+ * @summary Get show stats
  */
 
 export function useGetShowStats<
@@ -702,7 +704,7 @@ export function useGetShowStats<
 }
 
 /**
- * @summary List tickets owned by the authenticated user
+ * @summary List my purchased tickets
  */
 export const getListMyTicketsUrl = () => {
   return `/api/tickets`;
@@ -723,7 +725,7 @@ export const getListMyTicketsQueryKey = () => {
 
 export const getListMyTicketsQueryOptions = <
   TData = Awaited<ReturnType<typeof listMyTickets>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof listMyTickets>>,
@@ -750,15 +752,15 @@ export const getListMyTicketsQueryOptions = <
 export type ListMyTicketsQueryResult = NonNullable<
   Awaited<ReturnType<typeof listMyTickets>>
 >;
-export type ListMyTicketsQueryError = ErrorType<unknown>;
+export type ListMyTicketsQueryError = ErrorType<void>;
 
 /**
- * @summary List tickets owned by the authenticated user
+ * @summary List my purchased tickets
  */
 
 export function useListMyTickets<
   TData = Awaited<ReturnType<typeof listMyTickets>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof listMyTickets>>,
@@ -777,10 +779,10 @@ export function useListMyTickets<
 }
 
 /**
- * @summary Purchase a ticket for a show (mock payment)
+ * @summary Purchase a ticket
  */
 export const getPurchaseTicketUrl = () => {
-  return `/api/tickets/purchase`;
+  return `/api/tickets`;
 };
 
 export const purchaseTicket = async (
@@ -840,7 +842,7 @@ export type PurchaseTicketMutationBody = BodyType<PurchaseTicketBody>;
 export type PurchaseTicketMutationError = ErrorType<void>;
 
 /**
- * @summary Purchase a ticket for a show (mock payment)
+ * @summary Purchase a ticket
  */
 export const usePurchaseTicket = <
   TError = ErrorType<void>,
@@ -863,31 +865,45 @@ export const usePurchaseTicket = <
 };
 
 /**
- * @summary Check if user has a ticket for a specific show
+ * @summary Check if user has access to a show
  */
-export const getCheckTicketAccessUrl = (showId: number) => {
-  return `/api/tickets/check/${showId}`;
+export const getCheckTicketAccessUrl = (params: CheckTicketAccessParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tickets/access?${stringifiedParams}`
+    : `/api/tickets/access`;
 };
 
 export const checkTicketAccess = async (
-  showId: number,
+  params: CheckTicketAccessParams,
   options?: RequestInit,
 ): Promise<TicketAccess> => {
-  return customFetch<TicketAccess>(getCheckTicketAccessUrl(showId), {
+  return customFetch<TicketAccess>(getCheckTicketAccessUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getCheckTicketAccessQueryKey = (showId: number) => {
-  return [`/api/tickets/check/${showId}`] as const;
+export const getCheckTicketAccessQueryKey = (
+  params?: CheckTicketAccessParams,
+) => {
+  return [`/api/tickets/access`, ...(params ? [params] : [])] as const;
 };
 
 export const getCheckTicketAccessQueryOptions = <
   TData = Awaited<ReturnType<typeof checkTicketAccess>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(
-  showId: number,
+  params: CheckTicketAccessParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof checkTicketAccess>>,
@@ -900,18 +916,13 @@ export const getCheckTicketAccessQueryOptions = <
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getCheckTicketAccessQueryKey(showId);
+    queryOptions?.queryKey ?? getCheckTicketAccessQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof checkTicketAccess>>
-  > = ({ signal }) => checkTicketAccess(showId, { signal, ...requestOptions });
+  > = ({ signal }) => checkTicketAccess(params, { signal, ...requestOptions });
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!showId,
-    ...queryOptions,
-  } as UseQueryOptions<
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof checkTicketAccess>>,
     TError,
     TData
@@ -921,17 +932,17 @@ export const getCheckTicketAccessQueryOptions = <
 export type CheckTicketAccessQueryResult = NonNullable<
   Awaited<ReturnType<typeof checkTicketAccess>>
 >;
-export type CheckTicketAccessQueryError = ErrorType<unknown>;
+export type CheckTicketAccessQueryError = ErrorType<void>;
 
 /**
- * @summary Check if user has a ticket for a specific show
+ * @summary Check if user has access to a show
  */
 
 export function useCheckTicketAccess<
   TData = Awaited<ReturnType<typeof checkTicketAccess>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(
-  showId: number,
+  params: CheckTicketAccessParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof checkTicketAccess>>,
@@ -941,7 +952,7 @@ export function useCheckTicketAccess<
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getCheckTicketAccessQueryOptions(showId, options);
+  const queryOptions = getCheckTicketAccessQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -951,7 +962,7 @@ export function useCheckTicketAccess<
 }
 
 /**
- * @summary Get the authenticated user's profile
+ * @summary Get my user profile
  */
 export const getGetMyProfileUrl = () => {
   return `/api/users/me`;
@@ -972,7 +983,7 @@ export const getGetMyProfileQueryKey = () => {
 
 export const getGetMyProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof getMyProfile>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getMyProfile>>,
@@ -999,15 +1010,15 @@ export const getGetMyProfileQueryOptions = <
 export type GetMyProfileQueryResult = NonNullable<
   Awaited<ReturnType<typeof getMyProfile>>
 >;
-export type GetMyProfileQueryError = ErrorType<unknown>;
+export type GetMyProfileQueryError = ErrorType<void>;
 
 /**
- * @summary Get the authenticated user's profile
+ * @summary Get my user profile
  */
 
 export function useGetMyProfile<
   TData = Awaited<ReturnType<typeof getMyProfile>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getMyProfile>>,
@@ -1026,7 +1037,7 @@ export function useGetMyProfile<
 }
 
 /**
- * @summary Update user profile
+ * @summary Update my profile
  */
 export const getUpdateMyProfileUrl = () => {
   return `/api/users/me`;
@@ -1045,7 +1056,7 @@ export const updateMyProfile = async (
 };
 
 export const getUpdateMyProfileMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1086,13 +1097,13 @@ export type UpdateMyProfileMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateMyProfile>>
 >;
 export type UpdateMyProfileMutationBody = BodyType<UpdateProfileBody>;
-export type UpdateMyProfileMutationError = ErrorType<unknown>;
+export type UpdateMyProfileMutationError = ErrorType<void>;
 
 /**
- * @summary Update user profile
+ * @summary Update my profile
  */
 export const useUpdateMyProfile = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1112,10 +1123,10 @@ export const useUpdateMyProfile = <
 };
 
 /**
- * @summary Get user's watch/playback history
+ * @summary Get my watch history
  */
 export const getGetWatchHistoryUrl = () => {
-  return `/api/users/history`;
+  return `/api/users/watch-history`;
 };
 
 export const getWatchHistory = async (
@@ -1128,12 +1139,12 @@ export const getWatchHistory = async (
 };
 
 export const getGetWatchHistoryQueryKey = () => {
-  return [`/api/users/history`] as const;
+  return [`/api/users/watch-history`] as const;
 };
 
 export const getGetWatchHistoryQueryOptions = <
   TData = Awaited<ReturnType<typeof getWatchHistory>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getWatchHistory>>,
@@ -1160,15 +1171,15 @@ export const getGetWatchHistoryQueryOptions = <
 export type GetWatchHistoryQueryResult = NonNullable<
   Awaited<ReturnType<typeof getWatchHistory>>
 >;
-export type GetWatchHistoryQueryError = ErrorType<unknown>;
+export type GetWatchHistoryQueryError = ErrorType<void>;
 
 /**
- * @summary Get user's watch/playback history
+ * @summary Get my watch history
  */
 
 export function useGetWatchHistory<
   TData = Awaited<ReturnType<typeof getWatchHistory>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getWatchHistory>>,
@@ -1187,18 +1198,17 @@ export function useGetWatchHistory<
 }
 
 /**
- * @summary Record or update watch history for a show
+ * @summary Record watch progress
  */
-export const getRecordWatchHistoryUrl = (showId: number) => {
-  return `/api/users/history/${showId}`;
+export const getRecordWatchHistoryUrl = () => {
+  return `/api/users/watch-history`;
 };
 
 export const recordWatchHistory = async (
-  showId: number,
   recordHistoryBody: RecordHistoryBody,
   options?: RequestInit,
-): Promise<WatchHistory> => {
-  return customFetch<WatchHistory>(getRecordWatchHistoryUrl(showId), {
+): Promise<RecordWatchHistory200> => {
+  return customFetch<RecordWatchHistory200>(getRecordWatchHistoryUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -1207,20 +1217,20 @@ export const recordWatchHistory = async (
 };
 
 export const getRecordWatchHistoryMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof recordWatchHistory>>,
     TError,
-    { showId: number; data: BodyType<RecordHistoryBody> },
+    { data: BodyType<RecordHistoryBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof recordWatchHistory>>,
   TError,
-  { showId: number; data: BodyType<RecordHistoryBody> },
+  { data: BodyType<RecordHistoryBody> },
   TContext
 > => {
   const mutationKey = ["recordWatchHistory"];
@@ -1234,11 +1244,11 @@ export const getRecordWatchHistoryMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof recordWatchHistory>>,
-    { showId: number; data: BodyType<RecordHistoryBody> }
+    { data: BodyType<RecordHistoryBody> }
   > = (props) => {
-    const { showId, data } = props ?? {};
+    const { data } = props ?? {};
 
-    return recordWatchHistory(showId, data, requestOptions);
+    return recordWatchHistory(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1248,33 +1258,33 @@ export type RecordWatchHistoryMutationResult = NonNullable<
   Awaited<ReturnType<typeof recordWatchHistory>>
 >;
 export type RecordWatchHistoryMutationBody = BodyType<RecordHistoryBody>;
-export type RecordWatchHistoryMutationError = ErrorType<unknown>;
+export type RecordWatchHistoryMutationError = ErrorType<void>;
 
 /**
- * @summary Record or update watch history for a show
+ * @summary Record watch progress
  */
 export const useRecordWatchHistory = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof recordWatchHistory>>,
     TError,
-    { showId: number; data: BodyType<RecordHistoryBody> },
+    { data: BodyType<RecordHistoryBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof recordWatchHistory>>,
   TError,
-  { showId: number; data: BodyType<RecordHistoryBody> },
+  { data: BodyType<RecordHistoryBody> },
   TContext
 > => {
   return useMutation(getRecordWatchHistoryMutationOptions(options));
 };
 
 /**
- * @summary Get recent chat messages for a show
+ * @summary Get chat messages for a show
  */
 export const getGetChatMessagesUrl = (
   showId: number,
@@ -1291,8 +1301,8 @@ export const getGetChatMessagesUrl = (
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/chat/${showId}?${stringifiedParams}`
-    : `/api/chat/${showId}`;
+    ? `/api/chat/${showId}/messages?${stringifiedParams}`
+    : `/api/chat/${showId}/messages`;
 };
 
 export const getChatMessages = async (
@@ -1310,7 +1320,7 @@ export const getGetChatMessagesQueryKey = (
   showId: number,
   params?: GetChatMessagesParams,
 ) => {
-  return [`/api/chat/${showId}`, ...(params ? [params] : [])] as const;
+  return [`/api/chat/${showId}/messages`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetChatMessagesQueryOptions = <
@@ -1355,7 +1365,7 @@ export type GetChatMessagesQueryResult = NonNullable<
 export type GetChatMessagesQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get recent chat messages for a show
+ * @summary Get chat messages for a show
  */
 
 export function useGetChatMessages<
@@ -1383,10 +1393,10 @@ export function useGetChatMessages<
 }
 
 /**
- * @summary Send a chat message during a live show
+ * @summary Send a chat message
  */
 export const getSendChatMessageUrl = (showId: number) => {
-  return `/api/chat/${showId}`;
+  return `/api/chat/${showId}/messages`;
 };
 
 export const sendChatMessage = async (
@@ -1403,7 +1413,7 @@ export const sendChatMessage = async (
 };
 
 export const getSendChatMessageMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1444,13 +1454,13 @@ export type SendChatMessageMutationResult = NonNullable<
   Awaited<ReturnType<typeof sendChatMessage>>
 >;
 export type SendChatMessageMutationBody = BodyType<SendChatBody>;
-export type SendChatMessageMutationError = ErrorType<unknown>;
+export type SendChatMessageMutationError = ErrorType<void>;
 
 /**
- * @summary Send a chat message during a live show
+ * @summary Send a chat message
  */
 export const useSendChatMessage = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1470,7 +1480,82 @@ export const useSendChatMessage = <
 };
 
 /**
- * @summary List all users with purchase info (admin only)
+ * @summary Get admin dashboard stats
+ */
+export const getGetAdminDashboardUrl = () => {
+  return `/api/admin/dashboard`;
+};
+
+export const getAdminDashboard = async (
+  options?: RequestInit,
+): Promise<AdminDashboard> => {
+  return customFetch<AdminDashboard>(getGetAdminDashboardUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAdminDashboardQueryKey = () => {
+  return [`/api/admin/dashboard`] as const;
+};
+
+export const getGetAdminDashboardQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminDashboard>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminDashboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminDashboardQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAdminDashboard>>
+  > = ({ signal }) => getAdminDashboard({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminDashboard>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAdminDashboardQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminDashboard>>
+>;
+export type GetAdminDashboardQueryError = ErrorType<void>;
+
+/**
+ * @summary Get admin dashboard stats
+ */
+
+export function useGetAdminDashboard<
+  TData = Awaited<ReturnType<typeof getAdminDashboard>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminDashboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAdminDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all users (admin only)
  */
 export const getListUsersUrl = () => {
   return `/api/admin/users`;
@@ -1491,7 +1576,7 @@ export const getListUsersQueryKey = () => {
 
 export const getListUsersQueryOptions = <
   TData = Awaited<ReturnType<typeof listUsers>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
@@ -1514,15 +1599,15 @@ export const getListUsersQueryOptions = <
 export type ListUsersQueryResult = NonNullable<
   Awaited<ReturnType<typeof listUsers>>
 >;
-export type ListUsersQueryError = ErrorType<unknown>;
+export type ListUsersQueryError = ErrorType<void>;
 
 /**
- * @summary List all users with purchase info (admin only)
+ * @summary List all users (admin only)
  */
 
 export function useListUsers<
   TData = Awaited<ReturnType<typeof listUsers>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
@@ -1558,7 +1643,7 @@ export const getListAllPurchasesQueryKey = () => {
 
 export const getListAllPurchasesQueryOptions = <
   TData = Awaited<ReturnType<typeof listAllPurchases>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof listAllPurchases>>,
@@ -1585,7 +1670,7 @@ export const getListAllPurchasesQueryOptions = <
 export type ListAllPurchasesQueryResult = NonNullable<
   Awaited<ReturnType<typeof listAllPurchases>>
 >;
-export type ListAllPurchasesQueryError = ErrorType<unknown>;
+export type ListAllPurchasesQueryError = ErrorType<void>;
 
 /**
  * @summary List all ticket purchases (admin only)
@@ -1593,7 +1678,7 @@ export type ListAllPurchasesQueryError = ErrorType<unknown>;
 
 export function useListAllPurchases<
   TData = Awaited<ReturnType<typeof listAllPurchases>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof listAllPurchases>>,
@@ -1603,81 +1688,6 @@ export function useListAllPurchases<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListAllPurchasesQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-/**
- * @summary Get admin dashboard summary stats
- */
-export const getGetAdminDashboardUrl = () => {
-  return `/api/admin/dashboard`;
-};
-
-export const getAdminDashboard = async (
-  options?: RequestInit,
-): Promise<AdminDashboard> => {
-  return customFetch<AdminDashboard>(getGetAdminDashboardUrl(), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getGetAdminDashboardQueryKey = () => {
-  return [`/api/admin/dashboard`] as const;
-};
-
-export const getGetAdminDashboardQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAdminDashboard>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAdminDashboard>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetAdminDashboardQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getAdminDashboard>>
-  > = ({ signal }) => getAdminDashboard({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getAdminDashboard>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type GetAdminDashboardQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getAdminDashboard>>
->;
-export type GetAdminDashboardQueryError = ErrorType<unknown>;
-
-/**
- * @summary Get admin dashboard summary stats
- */
-
-export function useGetAdminDashboard<
-  TData = Awaited<ReturnType<typeof getAdminDashboard>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAdminDashboard>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetAdminDashboardQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
