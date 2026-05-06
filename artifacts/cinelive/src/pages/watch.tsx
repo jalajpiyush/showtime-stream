@@ -30,7 +30,7 @@ export default function Watch() {
     const interval = setInterval(() => {
       if (videoRef.current && !videoRef.current.paused) {
         recordProgress.mutate({
-          data: { progressSeconds: Math.floor(videoRef.current.currentTime), showId } as any
+          data: { progressSeconds: Math.floor(videoRef.current.currentTime), showId: id } as any
         });
       }
     }, 30000);
@@ -153,12 +153,12 @@ function ChatBox({ showId }: { showId: number }) {
   const [message, setMessage] = useState("");
 
   const { data: messages } = useGetChatMessages(
-    { showId },
-    { params: { limit: 50 } },
+    showId,
+    { limit: 50 },
     {
       query: {
         enabled: !!showId,
-        queryKey: getGetChatMessagesQueryKey({ showId }, { limit: 50 }),
+        queryKey: getGetChatMessagesQueryKey(showId, { limit: 50 }),
         refetchInterval: 5000
       }
     }
@@ -168,7 +168,7 @@ function ChatBox({ showId }: { showId: number }) {
     mutation: {
       onSuccess: () => {
         setMessage("");
-        queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey({ showId }, { limit: 50 }) });
+        queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey(showId, { limit: 50 }) });
       }
     }
   });

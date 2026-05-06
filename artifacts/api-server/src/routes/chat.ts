@@ -43,7 +43,7 @@ router.get("/:showId", async (req, res): Promise<void> => {
 router.post("/:showId", ensureUser, async (req: AuthRequest, res): Promise<void> => {
   try {
     const userId = req.userId!;
-    const showId = parseInt(req.params.showId);
+    const showId = parseInt(req.params.showId as string);
 
     if (isNaN(showId)) {
       res.status(400).json({ error: "Invalid showId" });

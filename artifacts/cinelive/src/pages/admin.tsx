@@ -133,9 +133,9 @@ function ShowsTab() {
   };
   const [formData, setFormData] = useState(defaultForm);
 
-  const createMut = useCreateShow({ onSuccess: () => { setIsEditorOpen(false); queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Created"); }});
-  const updateMut = useUpdateShow({ onSuccess: () => { setIsEditorOpen(false); queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Updated"); }});
-  const deleteMut = useDeleteShow({ onSuccess: () => { queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Deleted"); }});
+  const createMut = useCreateShow({ mutation: { onSuccess: () => { setIsEditorOpen(false); queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Created"); }}});
+  const updateMut = useUpdateShow({ mutation: { onSuccess: () => { setIsEditorOpen(false); queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Updated"); }}});
+  const deleteMut = useDeleteShow({ mutation: { onSuccess: () => { queryClient.invalidateQueries({queryKey: getListShowsQueryKey()}); toast.success("Deleted"); }}});
 
   const openEditor = (show?: any) => {
     if (show) {

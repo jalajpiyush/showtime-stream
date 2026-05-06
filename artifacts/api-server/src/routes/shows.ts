@@ -142,7 +142,7 @@ router.post("/", requireAuth, async (req: AuthRequest, res): Promise<void> => {
 // PATCH /api/shows/:id (admin)
 router.patch("/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
 
     const { title, description, thumbnailUrl, videoUrl, price, category, showType, genre, language, releaseType, duration, startTime, isLive, isFeatured } = req.body;
@@ -177,7 +177,7 @@ router.patch("/:id", requireAuth, async (req: AuthRequest, res): Promise<void> =
 // DELETE /api/shows/:id (admin)
 router.delete("/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
     await db.delete(showsTable).where(eq(showsTable.id, id));
     res.json({ message: "Show deleted" });
