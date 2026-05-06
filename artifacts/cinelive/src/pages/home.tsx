@@ -1,93 +1,22 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Show, useAuth } from "@clerk/react";
+import { Show } from "@clerk/react";
 import { useGetFeaturedShows, useListShows } from "@workspace/api-client-react";
 import { getGetFeaturedShowsQueryKey, getListShowsQueryKey } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlayCircle, Ticket, Clock, Globe, Film, Mic, Radio } from "lucide-react";
+import { PlayCircle, Ticket, Clock, Globe, Film, Mic, Radio, ChevronRight, Flame, Calendar, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type TabType = "all" | "movie" | "concert" | "live_event";
 
 const TABS: { key: TabType; label: string; icon: React.ReactNode }[] = [
-  { key: "all", label: "All", icon: <PlayCircle className="w-4 h-4" /> },
-  { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
-  { key: "concert", label: "Concerts", icon: <Mic className="w-4 h-4" /> },
-  { key: "live_event", label: "Live", icon: <Radio className="w-4 h-4" /> },
+  { key: "all", label: "All", icon: <Flame className="w-3.5 h-3.5" /> },
+  { key: "movie", label: "Movies", icon: <Film className="w-3.5 h-3.5" /> },
+  { key: "concert", label: "Concerts", icon: <Mic className="w-3.5 h-3.5" /> },
+  { key: "live_event", label: "Live", icon: <Radio className="w-3.5 h-3.5" /> },
 ];
 
 export default function Home() {
-  return (
-    <div className="w-full flex flex-col pb-20">
-      <Show when="signed-out">
-        <SignedOutHero />
-      </Show>
-      <Show when="signed-in">
-        <SignedInContent />
-      </Show>
-    </div>
-  );
-}
-
-function SignedOutHero() {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return (
-    <div className="relative w-full h-[85vh] flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center scale-105" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/20" />
-      <div className="relative z-10 text-center max-w-3xl px-4 flex flex-col items-center">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 mb-6 bg-primary/20 border border-primary/40 text-primary px-4 py-1.5 rounded-full text-sm font-semibold"
-        >
-          <Radio className="w-3.5 h-3.5" /> India's #1 Hybrid Cinema + OTT Platform
-        </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight"
-        >
-          Cinema. Concerts. <span className="text-primary">Live.</span>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-          className="text-lg md:text-xl text-gray-300 mb-8"
-        >
-          Buy a ticket. Watch from anywhere. Feel every moment.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex gap-3"
-        >
-          <Link href={`${basePath}/sign-up`} className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-lg text-lg font-bold transition-colors">
-            Start Watching
-          </Link>
-          <Link href={`${basePath}/sign-in`} className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
-            Sign In
-          </Link>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-10 flex items-center gap-8 text-sm text-gray-400"
-        >
-          <span className="flex items-center gap-1.5"><Film className="w-4 h-4 text-primary" /> Movies</span>
-          <span className="flex items-center gap-1.5"><Mic className="w-4 h-4 text-primary" /> Concerts</span>
-          <span className="flex items-center gap-1.5"><Radio className="w-4 h-4 text-primary" /> Live Events</span>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-function SignedInContent() {
   const [activeTab, setActiveTab] = useState<TabType>("all");
 
   const { data: featured } = useGetFeaturedShows({
@@ -96,7 +25,7 @@ function SignedInContent() {
 
   const showTypeParam = activeTab === "all" ? "all" : activeTab;
 
-  const { data: nowShowing } = useListShows(
+  const { data: nowShowing, isLoading: loadingNow } = useListShows(
     { category: "now_showing", showType: showTypeParam as any },
     { query: { enabled: true, queryKey: getListShowsQueryKey({ category: "now_showing", showType: showTypeParam as any }) } }
   );
@@ -115,68 +44,39 @@ function SignedInContent() {
   const nowShowingLive = nowShowing?.filter(s => s.showType === "live_event") ?? [];
   const upcomingLive = upcoming?.filter(s => s.showType === "live_event") ?? [];
 
-  const showAllNow = nowShowing ?? [];
-  const showAllUpcoming = upcoming ?? [];
-
   return (
-    <div className="w-full">
-      {/* Featured Hero */}
-      {featuredShow && (
-        <section className="relative w-full h-[60vh] md:h-[75vh] mb-8">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${featuredShow.thumbnailUrl || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070'})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-
-          <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 z-10 flex flex-col items-start max-w-4xl">
-            <div className="flex flex-wrap gap-2 mb-4">
-              {featuredShow.isLive && (
-                <span className="flex items-center gap-1 bg-primary text-white text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  Live
-                </span>
-              )}
-              <span className="bg-white/10 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wider border border-white/10">
-                {featuredShow.showType === "movie" ? "🎬 Movie" : featuredShow.showType === "concert" ? "🎤 Concert" : "🔴 Live Event"}
-              </span>
-              {featuredShow.releaseType === "hybrid" && (
-                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wider">
-                  In Cinemas & Online
-                </span>
-              )}
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-3 leading-tight">{featuredShow.title}</h2>
-            {featuredShow.language && (
-              <p className="text-gray-400 text-sm mb-2 flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5" /> {featuredShow.language}
-                {featuredShow.duration && <> · <Clock className="w-3.5 h-3.5" /> {featuredShow.duration} min</>}
-              </p>
-            )}
-            <p className="text-gray-300 text-lg mb-6 line-clamp-2 max-w-2xl">{featuredShow.description}</p>
-            <div className="flex items-center gap-4">
-              <Link href={`/shows/${featuredShow.id}`}>
-                <Button size="lg" className="text-base h-12 px-8 font-bold">
-                  <Ticket className="w-5 h-5 mr-2" />
-                  Book Ticket · ₹{featuredShow.price.toFixed(0)}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+    <div className="w-full flex flex-col pb-24">
+      {/* Hero Section — shown to everyone */}
+      {featuredShow ? (
+        <HeroSection show={featuredShow} />
+      ) : (
+        <LandingHero />
       )}
+
+      {/* Sign-up CTA bar — only for signed-out users */}
+      <Show when="signed-out">
+        <div className="mx-4 md:mx-8 my-6 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-bold text-base">Unlock full access</p>
+            <p className="text-muted-foreground text-sm">Sign in to buy tickets, stream online, and track your shows.</p>
+          </div>
+          <div className="flex gap-3 shrink-0">
+            <Link href="/sign-up" className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors whitespace-nowrap">Get Started</Link>
+            <Link href="/sign-in" className="bg-white/10 text-white border border-white/20 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors whitespace-nowrap">Sign In</Link>
+          </div>
+        </div>
+      </Show>
 
       {/* Category Tabs */}
       <div className="px-4 md:px-8 mb-8">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
                 activeTab === tab.key
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
                   : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
               }`}
             >
@@ -190,96 +90,101 @@ function SignedInContent() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="px-4 md:px-8 space-y-14"
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
+          className="px-4 md:px-8 space-y-12"
         >
-          {/* ALL tab */}
-          {activeTab === "all" && (
+          {loadingNow ? (
+            <SkeletonGrid />
+          ) : (
             <>
-              {nowShowingMovies.length > 0 && (
-                <Section title="🎬 Now Showing Movies">
-                  <MovieGrid shows={nowShowingMovies} />
-                </Section>
+              {activeTab === "all" && (
+                <>
+                  {nowShowingMovies.length > 0 && (
+                    <Section title="Now Showing" subtitle="Movies in theatres & online" icon={<Film className="w-4 h-4 text-primary" />}>
+                      <MovieGrid shows={nowShowingMovies} />
+                    </Section>
+                  )}
+                  {nowShowingConcerts.length > 0 && (
+                    <Section title="Concerts" subtitle="Live music experiences" icon={<Mic className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={nowShowingConcerts} />
+                    </Section>
+                  )}
+                  {nowShowingLive.length > 0 && (
+                    <Section title="Live Events" subtitle="Watch live, right now" icon={<Radio className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={nowShowingLive} />
+                    </Section>
+                  )}
+                  {upcomingMovies.length > 0 && (
+                    <Section title="Coming Soon" subtitle="Films releasing soon" icon={<Calendar className="w-4 h-4 text-primary" />}>
+                      <MovieGrid shows={upcomingMovies} />
+                    </Section>
+                  )}
+                  {(upcomingConcerts.length > 0 || upcomingLive.length > 0) && (
+                    <Section title="Upcoming Events" subtitle="Book your spot early" icon={<Star className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={[...upcomingConcerts, ...upcomingLive]} />
+                    </Section>
+                  )}
+                  {(nowShowing?.length ?? 0) === 0 && (upcoming?.length ?? 0) === 0 && (
+                    <EmptyState label="No shows available right now." />
+                  )}
+                </>
               )}
-              {nowShowingConcerts.length > 0 && (
-                <Section title="🎤 Concerts">
-                  <ShowGrid shows={nowShowingConcerts} />
-                </Section>
-              )}
-              {nowShowingLive.length > 0 && (
-                <Section title="🔴 Live Events">
-                  <ShowGrid shows={nowShowingLive} />
-                </Section>
-              )}
-              {upcomingMovies.length > 0 && (
-                <Section title="Coming Soon · Movies">
-                  <MovieGrid shows={upcomingMovies} />
-                </Section>
-              )}
-              {(upcomingConcerts.length > 0 || upcomingLive.length > 0) && (
-                <Section title="Coming Soon · Events">
-                  <ShowGrid shows={[...upcomingConcerts, ...upcomingLive]} />
-                </Section>
-              )}
-            </>
-          )}
 
-          {/* MOVIES tab */}
-          {activeTab === "movie" && (
-            <>
-              {nowShowingMovies.length > 0 && (
-                <Section title="🎬 Now Showing Movies">
-                  <MovieGrid shows={nowShowingMovies} />
-                </Section>
+              {activeTab === "movie" && (
+                <>
+                  {nowShowingMovies.length > 0 && (
+                    <Section title="Now Showing" icon={<Film className="w-4 h-4 text-primary" />}>
+                      <MovieGrid shows={nowShowingMovies} />
+                    </Section>
+                  )}
+                  {upcomingMovies.length > 0 && (
+                    <Section title="Coming Soon" icon={<Calendar className="w-4 h-4 text-primary" />}>
+                      <MovieGrid shows={upcomingMovies} />
+                    </Section>
+                  )}
+                  {nowShowingMovies.length === 0 && upcomingMovies.length === 0 && (
+                    <EmptyState label="No movies available right now." />
+                  )}
+                </>
               )}
-              {upcomingMovies.length > 0 && (
-                <Section title="Coming Soon">
-                  <MovieGrid shows={upcomingMovies} />
-                </Section>
-              )}
-              {nowShowingMovies.length === 0 && upcomingMovies.length === 0 && (
-                <EmptyState label="No movies available right now." />
-              )}
-            </>
-          )}
 
-          {/* CONCERTS tab */}
-          {activeTab === "concert" && (
-            <>
-              {nowShowingConcerts.length > 0 && (
-                <Section title="🎤 Now Playing">
-                  <ShowGrid shows={nowShowingConcerts} />
-                </Section>
+              {activeTab === "concert" && (
+                <>
+                  {nowShowingConcerts.length > 0 && (
+                    <Section title="Now Playing" icon={<Mic className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={nowShowingConcerts} />
+                    </Section>
+                  )}
+                  {upcomingConcerts.length > 0 && (
+                    <Section title="Coming Soon" icon={<Calendar className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={upcomingConcerts} />
+                    </Section>
+                  )}
+                  {nowShowingConcerts.length === 0 && upcomingConcerts.length === 0 && (
+                    <EmptyState label="No concerts available right now." />
+                  )}
+                </>
               )}
-              {upcomingConcerts.length > 0 && (
-                <Section title="Coming Soon">
-                  <ShowGrid shows={upcomingConcerts} />
-                </Section>
-              )}
-              {nowShowingConcerts.length === 0 && upcomingConcerts.length === 0 && (
-                <EmptyState label="No concerts available right now." />
-              )}
-            </>
-          )}
 
-          {/* LIVE tab */}
-          {activeTab === "live_event" && (
-            <>
-              {nowShowingLive.length > 0 && (
-                <Section title="🔴 Live Now">
-                  <ShowGrid shows={nowShowingLive} />
-                </Section>
-              )}
-              {upcomingLive.length > 0 && (
-                <Section title="Coming Up">
-                  <ShowGrid shows={upcomingLive} />
-                </Section>
-              )}
-              {nowShowingLive.length === 0 && upcomingLive.length === 0 && (
-                <EmptyState label="No live events right now." />
+              {activeTab === "live_event" && (
+                <>
+                  {nowShowingLive.length > 0 && (
+                    <Section title="Live Now" icon={<Radio className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={nowShowingLive} />
+                    </Section>
+                  )}
+                  {upcomingLive.length > 0 && (
+                    <Section title="Coming Up" icon={<Calendar className="w-4 h-4 text-primary" />}>
+                      <ShowGrid shows={upcomingLive} />
+                    </Section>
+                  )}
+                  {nowShowingLive.length === 0 && upcomingLive.length === 0 && (
+                    <EmptyState label="No live events right now." />
+                  )}
+                </>
               )}
             </>
           )}
@@ -289,10 +194,136 @@ function SignedInContent() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function LandingHero() {
+  return (
+    <div className="relative w-full h-[55vh] md:h-[65vh] flex items-center overflow-hidden mb-6">
+      {/* Cinematic gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0c12] via-[#14161a] to-[#1a0808]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_40%,rgba(220,38,38,0.18),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(220,38,38,0.08),transparent_60%)]" />
+      {/* Film grain texture */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMSIvPjwvc3ZnPg==')]" />
+
+      <div className="relative z-10 max-w-4xl px-8 md:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 mb-5 bg-primary/15 border border-primary/30 text-primary px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide"
+        >
+          <Radio className="w-3 h-3" /> India's Hybrid Cinema + OTT Platform
+        </motion.div>
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.06 }}
+          className="text-4xl md:text-6xl font-black tracking-tight text-white mb-4 leading-tight"
+        >
+          Cinema. Concerts.<br />
+          <span className="text-primary">Live.</span>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="text-base md:text-lg text-gray-400 mb-8 max-w-xl"
+        >
+          Buy a ticket. Watch from anywhere. Feel every moment.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="flex gap-3 flex-wrap"
+        >
+          <Link href="/sign-up" className="bg-primary hover:bg-primary/90 text-white px-7 py-3 rounded-xl text-sm font-bold transition-all hover:shadow-lg hover:shadow-primary/25">
+            Start Watching Free
+          </Link>
+          <Link href="/sign-in" className="bg-white/8 hover:bg-white/14 text-white border border-white/15 px-7 py-3 rounded-xl text-sm font-semibold transition-all">
+            Sign In
+          </Link>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 flex items-center gap-6 text-xs text-gray-500"
+        >
+          <span className="flex items-center gap-1.5"><Film className="w-3.5 h-3.5 text-primary/70" /> Movies</span>
+          <span className="flex items-center gap-1.5"><Mic className="w-3.5 h-3.5 text-primary/70" /> Concerts</span>
+          <span className="flex items-center gap-1.5"><Radio className="w-3.5 h-3.5 text-primary/70" /> Live Events</span>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function HeroSection({ show }: { show: any }) {
+  return (
+    <section className="relative w-full h-[55vh] md:h-[72vh] mb-6 overflow-hidden">
+      {show.thumbnailUrl ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-700"
+          style={{ backgroundImage: `url(${show.thumbnailUrl})` }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0c12] via-[#14161a] to-[#1a0808]" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/65 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
+
+      <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-10 max-w-4xl">
+        <div className="flex flex-wrap gap-2 mb-3">
+          {show.isLive && (
+            <span className="flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-lg shadow-primary/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
+            </span>
+          )}
+          <span className="bg-white/10 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-md uppercase tracking-wider border border-white/10">
+            {show.showType === "movie" ? "Movie" : show.showType === "concert" ? "Concert" : "Live Event"}
+          </span>
+          {show.releaseType === "hybrid" && (
+            <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+              Cinemas & Online
+            </span>
+          )}
+        </div>
+        <h2 className="text-3xl md:text-5xl font-black text-white mb-2 leading-tight">{show.title}</h2>
+        {show.language && (
+          <p className="text-gray-400 text-sm mb-2 flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5" /> {show.language}
+            {show.duration && <> · <Clock className="w-3.5 h-3.5" /> {show.duration} min</>}
+          </p>
+        )}
+        <p className="text-gray-300 text-sm md:text-base mb-5 line-clamp-2 max-w-2xl leading-relaxed">{show.description}</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href={`/shows/${show.id}`}>
+            <Button size="lg" className="text-sm h-11 px-6 font-bold shadow-lg shadow-primary/20">
+              <Ticket className="w-4 h-4 mr-2" />
+              Book Ticket · ₹{show.price.toFixed(0)}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Section({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="text-xl md:text-2xl font-bold mb-5 text-white border-l-4 border-primary pl-3">{title}</h3>
+      <div className="flex items-end justify-between mb-5">
+        <div className="flex items-center gap-3">
+          {icon && (
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              {icon}
+            </div>
+          )}
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-white leading-tight">{title}</h3>
+            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+          </div>
+        </div>
+      </div>
       {children}
     </section>
   );
@@ -300,7 +331,25 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="text-center py-20 text-muted-foreground">{label}</div>
+    <div className="text-center py-20 bg-card/40 rounded-2xl border border-border/50">
+      <Film className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+      <p className="text-muted-foreground text-sm">{label}</p>
+    </div>
+  );
+}
+
+function SkeletonGrid() {
+  return (
+    <div className="space-y-12">
+      <div>
+        <div className="h-7 w-48 bg-card rounded-lg mb-5 animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="aspect-[2/3] bg-card rounded-xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -316,7 +365,7 @@ function MovieGrid({ shows }: { shows: any[] }) {
 
 function ShowGrid({ shows }: { shows: any[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5">
       {shows.map((show, i) => (
         <ShowCard key={show.id} show={show} index={i} />
       ))}
@@ -327,13 +376,12 @@ function ShowGrid({ shows }: { shows: any[] }) {
 function MovieCard({ show, index }: { show: any; index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      className="group relative rounded-xl overflow-hidden bg-card border border-border cursor-pointer hover:border-primary/40 transition-all hover:shadow-xl hover:shadow-primary/10"
+      transition={{ delay: index * 0.05 }}
+      className="group relative rounded-xl overflow-hidden bg-card border border-border cursor-pointer hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5"
     >
       <Link href={`/shows/${show.id}`}>
-        {/* Tall movie poster ratio */}
         <div className="aspect-[2/3] w-full bg-zinc-900 relative overflow-hidden">
           {show.thumbnailUrl ? (
             <img
@@ -343,39 +391,41 @@ function MovieCard({ show, index }: { show: any; index: number }) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Film className="w-12 h-12 text-zinc-700" />
+              <Film className="w-10 h-10 text-zinc-700" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
 
-          {/* Badges top */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
             {show.isLive && (
-              <span className="flex items-center gap-1 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+              <span className="flex items-center gap-1 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                 <span className="w-1 h-1 rounded-full bg-white animate-pulse" /> Live
               </span>
             )}
             {show.releaseType === "hybrid" && (
               <span className="bg-amber-500/90 text-black text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
-                Cinemas & Online
+                Hybrid
+              </span>
+            )}
+            {show.releaseType === "online_only" && (
+              <span className="bg-blue-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                Online
               </span>
             )}
           </div>
 
           {/* Bottom info */}
           <div className="absolute bottom-0 w-full p-3">
-            <h4 className="text-sm font-bold text-white line-clamp-2 mb-1.5 leading-snug">{show.title}</h4>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <h4 className="text-xs font-bold text-white line-clamp-2 mb-1 leading-snug">{show.title}</h4>
+            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
               {show.language && (
-                <span className="text-[10px] bg-white/15 text-white px-1.5 py-0.5 rounded font-medium">{show.language}</span>
-              )}
-              {show.duration && (
-                <span className="text-[10px] text-gray-400">{show.duration} min</span>
+                <span className="text-[9px] bg-white/12 text-white px-1.5 py-0.5 rounded font-medium">{show.language}</span>
               )}
             </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-primary font-bold text-sm">₹{show.price.toFixed(0)}</span>
-              {show.genre && <span className="text-[10px] text-gray-500 uppercase tracking-wide">{show.genre}</span>}
+            <div className="flex items-center justify-between">
+              <span className="text-primary font-black text-sm">₹{show.price.toFixed(0)}</span>
+              {show.duration && <span className="text-[9px] text-gray-500">{show.duration}m</span>}
             </div>
           </div>
         </div>
@@ -387,10 +437,10 @@ function MovieCard({ show, index }: { show: any; index: number }) {
 function ShowCard({ show, index }: { show: any; index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08 }}
-      className="group relative rounded-xl overflow-hidden bg-card border border-border cursor-pointer hover:border-primary/40 transition-all hover:shadow-xl hover:shadow-primary/10"
+      transition={{ delay: index * 0.06 }}
+      className="group relative rounded-xl overflow-hidden bg-card border border-border cursor-pointer hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10"
     >
       <Link href={`/shows/${show.id}`}>
         <div className="aspect-video w-full bg-zinc-900 relative overflow-hidden">
@@ -402,27 +452,32 @@ function ShowCard({ show, index }: { show: any; index: number }) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <PlayCircle className="w-12 h-12 text-zinc-700" />
+              <PlayCircle className="w-10 h-10 text-zinc-700" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
             {show.isLive && (
-              <span className="flex items-center gap-1 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-lg shadow-primary/20">
+              <span className="flex items-center gap-1 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-lg shadow-primary/25">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
               </span>
             )}
             {show.genre && (
-              <span className="bg-black/60 backdrop-blur-sm text-white border border-white/10 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{show.genre}</span>
+              <span className="bg-black/60 backdrop-blur-sm text-white border border-white/10 text-[9px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{show.genre}</span>
             )}
           </div>
 
-          <div className="absolute bottom-0 w-full p-4">
-            <h4 className="text-base font-bold text-white line-clamp-1 mb-1">{show.title}</h4>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-primary font-bold">₹{show.price.toFixed(0)}</span>
-              <span className="text-xs text-gray-400">{show.duration} min</span>
+          <div className="absolute bottom-0 w-full p-3.5">
+            <h4 className="text-sm font-bold text-white line-clamp-1 mb-1">{show.title}</h4>
+            <div className="flex items-center justify-between">
+              <span className="text-primary font-black text-sm">₹{show.price.toFixed(0)}</span>
+              {show.startTime && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(show.startTime).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                </span>
+              )}
             </div>
           </div>
         </div>
